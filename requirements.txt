@@ -1,0 +1,29 @@
+# Core data
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+
+# Deep learning
+tensorflow>=2.16
+
+# Hugging Face LLM
+transformers>=4.40
+torch>=2.2
+accelerate>=0.30
+sentencepiece>=0.2
+
+# Visualization
+matplotlib>=3.8
+seaborn>=0.13
+plotly>=5.20
+networkx>=3.2
+
+# App + notebooks
+streamlit>=1.33
+jupyter>=1.0
+
+# Utilities
+tqdm>=4.66
+python-dotenv>=1.0
+
+kaleido

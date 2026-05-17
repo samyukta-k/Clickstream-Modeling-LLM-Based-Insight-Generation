@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Environment
+.env
+.env.local
+
+# Data & artifacts (keep folders, ignore contents)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+outputs/charts/*
+outputs/logs/*
+outputs/models/*
+outputs/predictions/*
+outputs/reports/*
+!outputs/**/.gitkeep
+
+# Hugging Face cache
+.cache/
+hf_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
