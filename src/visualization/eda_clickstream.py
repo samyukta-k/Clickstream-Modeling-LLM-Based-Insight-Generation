@@ -7,6 +7,8 @@ import matplotlib.ticker as mticker
 import seaborn as sns
 import plotly.graph_objects as go
 import plotly.express as px
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 
 warnings.filterwarnings("ignore")
 

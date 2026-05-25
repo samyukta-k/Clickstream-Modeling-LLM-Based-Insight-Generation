@@ -493,7 +493,6 @@ def train_model(
         lr=learning_rate,
         weight_decay=WEIGHT_DECAY
     )
-
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
         mode="max",
@@ -535,7 +534,7 @@ def train_model(
 
         history["train_acc"].append(train_acc)
         history["val_acc"].append(val_acc)
-        
+
         scheduler.step(val_acc)
 
         elapsed = time.time() - t0
