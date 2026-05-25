@@ -91,7 +91,7 @@ def build_page_sequences(df: pd.DataFrame) -> list:
             funnel_stage
         ))
 
-    print(f"      Raw sessions (>= 2 clicks): {len(sessions):,}")
+    print(f"      Raw sessions: {len(sessions):,}")
 
     return sessions
 
@@ -456,9 +456,7 @@ def split_dataset(
 
 if __name__ == "__main__":
 
-    print("\n" + "=" * 60)
-    print(" PREPROCESSING CLICKSTREAM DATA ")
-    print("=" * 60)
+    print(" PREPROCESSING CLICKSTREAM DATA:")
 
     df = load_data(RAW_DATA_PATH)
 
@@ -528,11 +526,7 @@ if __name__ == "__main__":
         traffic,
         funnel_stage
     )
-
-    print("\n" + "=" * 60)
-    print(" PREPROCESSING COMPLETE ")
-    print("=" * 60)
-
+    
     print(f"X_train shape : {X_tr.shape}")
     print(f"X_test shape  : {X_te.shape}")
 

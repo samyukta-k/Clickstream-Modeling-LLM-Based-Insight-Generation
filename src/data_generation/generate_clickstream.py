@@ -656,9 +656,7 @@ def print_summary(df: pd.DataFrame) -> None:
     bounce_rate = df.groupby("session_id")["bounce_flag"].max().mean() * 100
     avg_len     = df.groupby("session_id")["step"].max().mean()
 
-    print("\n" + "=" * 60)
-    print("  DATASET SUMMARY")
-    print("=" * 60)
+    print("  DATASET SUMMARY:")
     print(f"  Total rows       : {n_rows:,}")
     print(f"  Sessions         : {n_sessions:,}")
     print(f"  Unique users     : {n_users:,}")
@@ -666,10 +664,8 @@ def print_summary(df: pd.DataFrame) -> None:
     print(f"  Conversion rate  : {conv_rate:.2f}%")
     print(f"  Bounce rate      : {bounce_rate:.2f}%")
 
-    print("\n  USER PERSONA SUMMARY")
-    print("  " + "-" * 56)
+    print("\n  USER PERSONA SUMMARY:")
     print(f"  {'Persona':<22} {'Sessions':>9} {'Conv':>7} {'Conv%':>7} {'AvgDepth':>9}")
-    print("  " + "-" * 56)
 
     session_df = df.groupby("session_id").agg(
         persona_type=("persona_type", "first"),
@@ -685,14 +681,11 @@ def print_summary(df: pd.DataFrame) -> None:
         depth = sub["depth"].mean()
         print(f"  {persona:<22} {n:>9,} {conv:>7,} {pct:>6.1f}% {depth:>9.2f}")
 
-    print("=" * 60)
-    print("\n  FUNNEL STAGE COVERAGE")
-    print("  " + "-" * 40)
+    print("\n  FUNNEL STAGE COVERAGE:")
     stage_counts = df["funnel_stage"].value_counts()
     for stage, cnt in stage_counts.items():
         pct = cnt / len(df) * 100
         print(f"  {stage:<14} {cnt:>9,}  ({pct:.1f}%)")
-    print("=" * 60)
 
 def main():
     random.seed(RANDOM_SEED)

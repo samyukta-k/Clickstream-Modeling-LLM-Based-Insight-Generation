@@ -16,8 +16,8 @@ DATA_DIR   = "data/processed"
 OUT_MODELS = "outputs/models"
 OUT_CHARTS = "outputs/charts"
 
-PAGE_EMBEDDING_DIM = 32
-HIDDEN_DIM         = 64
+PAGE_EMBEDDING_DIM = 24 
+HIDDEN_DIM         = 48 
 NUM_LAYERS         = 1
 DROPOUT            = 0.3
 
@@ -27,9 +27,9 @@ TRAFFIC_EMBEDDING_DIM      = 8
 FUNNEL_STAGE_EMBEDDING_DIM = 8
 
 BATCH_SIZE    = 64
-LEARNING_RATE = 1e-3
-NUM_EPOCHS    = 50
-PATIENCE      = 5
+LEARNING_RATE = 3e-4 
+NUM_EPOCHS    = 15
+PATIENCE      = 3
 WEIGHT_DECAY  = 1e-4
 
 CHECKPOINT_ON_ACCURACY = True
@@ -173,6 +173,7 @@ def make_dataloaders(
     )
 
     return train_loader, test_loader
+
 
 class BiLSTMNextClickWithContext(nn.Module):
 
@@ -484,13 +485,20 @@ def train_model(
 ):
 
     criterion = nn.CrossEntropyLoss(
-    label_smoothing=0.1
-)
+        label_smoothing=0.1
+    )
 
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=learning_rate,
         weight_decay=WEIGHT_DECAY
+    )
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="max",
+        factor=0.5,
+        patience=1
     )
 
     best_val_acc = 0
@@ -527,8 +535,12 @@ def train_model(
 
         history["train_acc"].append(train_acc)
         history["val_acc"].append(val_acc)
+        
+        scheduler.step(val_acc)
 
         elapsed = time.time() - t0
+
+        current_lr = optimizer.param_groups[0]["lr"]
 
         print(
             f"Epoch {epoch:02d} | "
@@ -536,6 +548,7 @@ def train_model(
             f"Val Loss={val_loss:.4f} | "
             f"Train Acc={train_acc:.4f} | "
             f"Val Acc={val_acc:.4f} | "
+            f"LR={current_lr:.6f} | "
             f"{elapsed:.1f}s"
         )
 
@@ -561,13 +574,72 @@ def train_model(
             )
 
         else:
+
             patience_counter += 1
 
             if patience_counter >= patience:
+
                 print("Early stopping triggered.")
+
                 break
 
     return history
+
+
+def plot_training_history(history):
+
+    train_acc = history["train_acc"]
+    val_acc   = history["val_acc"]
+
+    best_epoch = np.argmax(val_acc) + 1
+
+    train_acc = train_acc[:best_epoch]
+    val_acc   = val_acc[:best_epoch]
+
+    epochs = range(1, best_epoch + 1)
+
+    plt.figure(figsize=(12, 7))
+
+    plt.plot(
+        epochs,
+        train_acc,
+        marker="o",
+        label="Train Accuracy"
+    )
+
+    plt.plot(
+        epochs,
+        val_acc,
+        marker="o",
+        label="Val Accuracy"
+    )
+
+    best_epoch = np.argmax(val_acc) + 1
+
+    plt.axvline(
+        best_epoch,
+        linestyle="--",
+        alpha=0.7,
+        label=f"Best Epoch ({best_epoch})"
+    )
+
+    plt.title("Accuracy per Epoch")
+
+    plt.xlabel("Epoch")
+
+    plt.ylabel("Accuracy")
+
+    plt.legend()
+
+    plt.grid(True, alpha=0.3)
+
+    os.makedirs(OUT_CHARTS, exist_ok=True)
+
+    save_path = os.path.join(
+        OUT_CHARTS,
+        "accuracy_per_epoch.png"
+    )
+    plt.savefig(save_path, dpi=150)
 
 
 def main():
@@ -612,17 +684,13 @@ def main():
         criterion,
         DEVICE
     )
-
-    print("\n" + "=" * 50)
-
     print(f"Final Test Loss     : {test_loss:.4f}")
 
     print(
         f"Final Test Accuracy : "
         f"{test_acc * 100:.2f}%"
     )
-
-    print("=" * 50)
+    plot_training_history(history)
 
 
 if __name__ == "__main__":

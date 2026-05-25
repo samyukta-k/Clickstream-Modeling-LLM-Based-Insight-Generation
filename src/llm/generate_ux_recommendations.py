@@ -168,7 +168,6 @@ def print_predictions(results):
     print("  BiLSTM NEXT-CLICK PREDICTIONS")
     for i, r in enumerate(results, 1):
         print(f"\n  Sample {i}")
-        print(f"  {'─'*60}")
         print(f"  Context : persona={r['persona_type']}  device={r['device_type']}  "
               f"traffic={r['traffic_source']}  funnel={r['funnel_stage']}")
         print(f"  Journey : {' -> '.join(r['page_sequence']) if r['page_sequence'] else '(empty)'}")

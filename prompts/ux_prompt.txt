@@ -5,9 +5,7 @@ page they are likely to visit. Your job is NOT to describe the journey — it is
 give sharp, specific recommendations that convert this user RIGHT NOW, before they
 leave the current page.
 
-────────────────────────────────────────────────────────────────────────────────
-SESSION DATA
-────────────────────────────────────────────────────────────────────────────────
+SESSION DATA:
 Persona         : {persona_type}
 Device          : {device_type}
 Traffic source  : {traffic_source}
@@ -20,9 +18,7 @@ Last page visited        : (the final page in the sequence above)
 Predicted next click     : {predicted_next_click}
 Prediction confidence    : {confidence_score}%
 
-────────────────────────────────────────────────────────────────────────────────
-CONVERSION TASK
-────────────────────────────────────────────────────────────────────────────────
+CONVERSION TASK:
 The user is about to leave to "{predicted_next_click}".
 That predicted click tells you what they still need before converting.
 Your job: fix the LAST PAGE they are on so they convert instead of leaving.

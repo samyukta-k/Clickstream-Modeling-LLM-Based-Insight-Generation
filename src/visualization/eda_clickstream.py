@@ -111,7 +111,7 @@ def plot_conversion_funnel(df: pd.DataFrame) -> None:
     print("Funnel Drop offs:")
     for i in range(1, len(pages)):
         drop = (values[i - 1] - values[i]) / values[i - 1] * 100
-        print(f"     {pages[i-1]:10s} -> {pages[i]:10s}  drop-off: {drop:.1f}%")
+        print(f"     {pages[i-1]:10s} - {pages[i]:10s}  drop-off: {drop:.1f}%")
     print()
 
 def plot_bounce_rate(df: pd.DataFrame) -> None:
@@ -293,32 +293,28 @@ def print_ux_insights(df: pd.DataFrame) -> None:
                 df.groupby("current_page").size() * 100).sort_values(ascending=False)
     drop_off = drop_off[drop_off.index != "Exit"].dropna()
 
-    print("=" * 58)
-    print("  UX INSIGHTS")
-    print("=" * 58)
+    print("  UX INSIGHTS:")
     print(f"\nOverall conversion rate : {overall_cvr:.2f}%")
     print(f"Overall bounce rate     : {overall_bounce:.2f}%\n")
 
     print("Bounce Rate by Device:")
     for dev, rate in device_bounce.items():
-        print(f"     {dev:8s}  ->  {rate:.1f}%")
+        print(f"     {dev:8s}  -  {rate:.1f}%")
 
-    print(f"\nBest-converting traffic sources:")
+    print(f"\nBest converting traffic sources:")
     for src, rate in source_cvr.head(3).items():
-        print(f"     {src:10s}  ->  {rate:.1f}% CVR")
+        print(f"     {src:10s}  -  {rate:.1f}% CVR")
 
-    print(f"\n  High Drop-off Pages (% of visits that exit):")
+    print(f"\n  High Drop off Pages (% of visits that exit):")
     for page, rate in drop_off.head(5).items():
         flag = "ATTENTION" if rate > 40 else ""
-        print(f"     {page:10s}  ->  {rate:.1f}%{flag}")
+        print(f"     {page:10s} -  {rate:.1f}%{flag}")
 
-    print(f"\nConversion Funnel – sessions that reached Payment:")
+    print(f"\nConversion Funnel - sessions that reached Payment:")
     payment_sessions = df[df["current_page"] == "Payment"]["session_id"].nunique()
     total_sessions   = df["session_id"].nunique()
     print(f"     {payment_sessions:,} / {total_sessions:,} sessions  "
           f"({payment_sessions/total_sessions*100:.2f}%)")
-
-    print("\n" + "=" * 58 + "\n")
 
 def main():
     df = load_data(DATA_PATH)
