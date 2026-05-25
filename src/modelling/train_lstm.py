@@ -174,10 +174,6 @@ def make_dataloaders(
 
     return train_loader, test_loader
 
-
-# =========================================================
-# BiLSTM + Attention Model
-# =========================================================
 class BiLSTMNextClickWithContext(nn.Module):
 
     def __init__(
@@ -199,18 +195,12 @@ class BiLSTMNextClickWithContext(nn.Module):
 
         super().__init__()
 
-        # =================================================
-        # PAGE EMBEDDING
-        # =================================================
         self.page_embedding = nn.Embedding(
             page_vocab_size,
             page_emb_dim,
             padding_idx=0
         )
 
-        # =================================================
-        # BiLSTM
-        # =================================================
         self.lstm = nn.LSTM(
             input_size=page_emb_dim,
             hidden_size=hidden_dim,
@@ -222,17 +212,11 @@ class BiLSTMNextClickWithContext(nn.Module):
 
         self.bilstm_output_dim = hidden_dim * 2
 
-        # =================================================
-        # ATTENTION LAYER
-        # =================================================
         self.attention = nn.Linear(
             self.bilstm_output_dim,
             1
         )
 
-        # =================================================
-        # CONTEXT EMBEDDINGS
-        # =================================================
         self.persona_embedding = nn.Embedding(
             persona_vocab_size,
             persona_emb_dim,
@@ -281,19 +265,10 @@ class BiLSTMNextClickWithContext(nn.Module):
         x_funnel_stage
     ):
 
-        # =================================================
-        # PAGE EMBEDDINGS
-        # =================================================
         page_emb = self.page_embedding(x_pages)
 
-        # =================================================
-        # BiLSTM OUTPUT
-        # =================================================
         lstm_out, _ = self.lstm(page_emb)
 
-        # =================================================
-        # ATTENTION
-        # =================================================
         attention_scores = self.attention(lstm_out)
 
         attention_weights = torch.softmax(
@@ -306,9 +281,6 @@ class BiLSTMNextClickWithContext(nn.Module):
             dim=1
         )
 
-        # =================================================
-        # CONTEXT FEATURES
-        # =================================================
         p_emb = self.persona_embedding(x_persona)
 
         d_emb = self.device_embedding(x_device)
@@ -317,9 +289,6 @@ class BiLSTMNextClickWithContext(nn.Module):
 
         f_emb = self.funnel_stage_embedding(x_funnel_stage)
 
-        # =================================================
-        # CONCATENATE FEATURES
-        # =================================================
         combined = torch.cat([
             context_vector,
             p_emb,

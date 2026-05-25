@@ -49,10 +49,6 @@ def load_data(filepath: str) -> pd.DataFrame:
 
     return df
 
-
-# =========================================================
-# NEW: DWELL TIME BUCKETING
-# =========================================================
 def bucket_time(t):
     if t < 30:
         return "short"
@@ -69,13 +65,7 @@ def build_page_sequences(df: pd.DataFrame) -> list:
     sessions = []
 
     for sid, group in df_sorted.groupby("session_id"):
-
-        # =================================================
-        # NEW: PAGE + TIME BUCKET TOKENS
-        # Example:
-        # Product_long
-        # Search_short
-        # =================================================
+        
         page_tokens = [
             f"{page}_{bucket_time(time_spent)}"
             for page, time_spent in zip(

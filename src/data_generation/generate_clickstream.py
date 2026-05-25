@@ -246,36 +246,24 @@ def select_next_page(current_page: str,
         max_pos
     )
 
-    # =====================================================
-    # ADVANCE
-    # =====================================================
     if action == "advance":
 
         new_pos = min(funnel_pos + 1, max_pos)
 
         next_page = steps[new_pos][0]
 
-    # =====================================================
-    # LOOP
-    # =====================================================
     elif action == "loop":
 
         new_pos = funnel_pos
 
         next_page = current_page
 
-    # =====================================================
-    # BACKSTEP
-    # =====================================================
     elif action == "backstep":
 
         new_pos = max(funnel_pos - 1, 0)
 
         next_page = steps[new_pos][0]
 
-    # =====================================================
-    # NOISE
-    # =====================================================
     elif action == "noise":
 
         bias_map = TRANSITION_BIAS.get(current_page)
@@ -291,13 +279,8 @@ def select_next_page(current_page: str,
         else:
             next_page = "Home"
 
-        # IMPORTANT:
-        # noise should not advance funnel state
         new_pos = funnel_pos
-
-    # =====================================================
-    # EXIT
-    # =====================================================
+        
     else:
 
         next_page = "Exit"
