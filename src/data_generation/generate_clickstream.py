@@ -40,7 +40,7 @@ TIME_SPENT_PARAMS = {
 
 FUNNELS = {
     "Buyer": {
-        "weight":       0.25,
+        "weight": 0.30,
         "steps": [
             ("Home",     "discovery"),
             ("Search",   "discovery"),
@@ -50,14 +50,14 @@ FUNNELS = {
             ("Payment",  "purchase"),
             ("Exit",     "exit"),
         ],
-        "advance_prob": 0.68,
-        "loop_prob": 0.08,
-        "backstep_prob": 0.10,
-        "noise_prob": 0.05,
+        "advance_prob": 0.78,
+        "loop_prob": 0.05,
+        "backstep_prob": 0.06,
+        "noise_prob": 0.04,
     },
 
     "Casual Browser": {
-        "weight":       0.30,
+        "weight": 0.22,
         "steps": [
             ("Home",    "discovery"),
             ("Search",  "discovery"),
@@ -71,7 +71,7 @@ FUNNELS = {
     },
 
     "Returning User": {
-        "weight":       0.20,
+        "weight": 0.25,
         "steps": [
             ("Home",     "discovery"),
             ("Profile",  "discovery"),
@@ -80,14 +80,14 @@ FUNNELS = {
             ("Checkout", "purchase"),
             ("Exit",     "exit"),
         ],
-       "advance_prob": 0.70,
+        "advance_prob": 0.75,
         "loop_prob": 0.06,
         "backstep_prob": 0.08,
         "noise_prob": 0.05,
     },
 
     "Support-Seeking User": {
-        "weight":       0.13,
+        "weight": 0.11,
         "steps": [
             ("Home",    "discovery"),
             ("Product", "evaluation"),
@@ -101,11 +101,11 @@ FUNNELS = {
     },
 
     "Frustrated User": {
-        "weight":       0.12,
+        "weight": 0.05,
         "steps": [
             ("Home",    "discovery"),
             ("Product", "evaluation"),
-            ("Home",    "discovery"), 
+            ("Home",    "discovery"),
             ("Search",  "discovery"),
             ("Exit",    "exit"),
         ],
@@ -114,8 +114,24 @@ FUNNELS = {
         "backstep_prob": 0.15,
         "noise_prob": 0.08,
     },
-}
 
+    "Repeat Visitor": {
+    "weight": 0.07,
+    "steps": [
+            ("Home",     "discovery"),
+            ("Profile",  "discovery"),
+            ("Search",   "discovery"),
+            ("Product",  "evaluation"),
+            ("Cart",     "evaluation"),
+            ("Checkout", "purchase"),
+            ("Exit",     "exit"),
+        ],
+        "advance_prob": 0.76,
+        "loop_prob": 0.06,
+        "backstep_prob": 0.05,
+        "noise_prob": 0.03,
+    },
+}
 _total_weight = sum(f["weight"] for f in FUNNELS.values())
 assert abs(_total_weight - 1.0) < 1e-6, (
     f"Persona weights sum to {_total_weight:.6f}, expected 1.0"
@@ -163,33 +179,130 @@ def _pick_action(persona_name: str, funnel_pos: int, max_funnel_pos: int) -> str
         return "noise"
     return "exit"
 
+NOISE_MAP = {
+    "Home": ["Search", "Profile"],
+    "Search": ["Home", "Product"],
+    "Product": ["Search", "Support", "Cart"],
+    "Cart": ["Product", "Checkout"],
+    "Checkout": ["Cart", "Payment"],
+    "Payment": ["Checkout"],
+    "Profile": ["Home", "Search"],
+    "Support": ["Home", "Product"],
+}
 
-def select_next_page(current_page: str, persona_name: str,
+TRANSITION_BIAS = {
+    "Home": {
+        "Search": 0.55,
+        "Profile": 0.20,
+        "Product": 0.25,
+    },
+
+    "Search": {
+        "Product": 0.70,
+        "Home": 0.15,
+        "Search": 0.15,
+    },
+
+    "Product": {
+        "Cart": 0.45,
+        "Search": 0.30,
+        "Support": 0.10,
+        "Product": 0.15,
+    },
+
+    "Cart": {
+        "Checkout": 0.60,
+        "Product": 0.30,
+        "Cart": 0.10,
+    },
+
+    "Checkout": {
+        "Payment": 0.80,
+        "Cart": 0.20,
+    },
+
+    "Profile": {
+        "Search": 0.50,
+        "Home": 0.30,
+        "Profile": 0.20,
+    },
+
+    "Support": {
+        "Product": 0.60,
+        "Home": 0.40,
+    }
+}
+
+def select_next_page(current_page: str,
+                     persona_name: str,
                      funnel_pos: int) -> tuple[str, int]:
-    steps         = FUNNELS[persona_name]["steps"]
-    max_pos       = len(steps) - 1
-    action        = _pick_action(persona_name, funnel_pos, max_pos)
 
+    steps   = FUNNELS[persona_name]["steps"]
+    max_pos = len(steps) - 1
+
+    action = _pick_action(
+        persona_name,
+        funnel_pos,
+        max_pos
+    )
+
+    # =====================================================
+    # ADVANCE
+    # =====================================================
     if action == "advance":
-        new_pos   = min(funnel_pos + 1, max_pos)
+
+        new_pos = min(funnel_pos + 1, max_pos)
+
         next_page = steps[new_pos][0]
 
+    # =====================================================
+    # LOOP
+    # =====================================================
     elif action == "loop":
-        new_pos   = funnel_pos
-        next_page = current_page    
 
+        new_pos = funnel_pos
+
+        next_page = current_page
+
+    # =====================================================
+    # BACKSTEP
+    # =====================================================
     elif action == "backstep":
-        new_pos   = max(funnel_pos - 1, 0)
+
+        new_pos = max(funnel_pos - 1, 0)
+
         next_page = steps[new_pos][0]
 
+    # =====================================================
+    # NOISE
+    # =====================================================
     elif action == "noise":
-        noise_pool = [p for p in PAGES if p != "Exit"]
-        next_page  = random.choice(noise_pool)
-        new_pos    = funnel_pos     
 
+        bias_map = TRANSITION_BIAS.get(current_page)
+
+        if bias_map:
+
+            next_page = random.choices(
+                list(bias_map.keys()),
+                weights=list(bias_map.values()),
+                k=1
+            )[0]
+
+        else:
+            next_page = "Home"
+
+        # IMPORTANT:
+        # noise should not advance funnel state
+        new_pos = funnel_pos
+
+    # =====================================================
+    # EXIT
+    # =====================================================
     else:
+
         next_page = "Exit"
-        new_pos   = max_pos    
+
+        new_pos = max_pos
 
     return next_page, new_pos
 
@@ -201,11 +314,32 @@ def sample_time_spent(page: str) -> float:
 def assign_persona() -> str:
     return random.choices(_PERSONA_NAMES, weights=_PERSONA_WEIGHTS, k=1)[0]
 
+def get_time_context(timestamp: datetime) -> tuple[str, str]:
+    hour = timestamp.hour
+
+    if 5 <= hour < 12:
+        time_of_day = "morning"
+    elif 12 <= hour < 17:
+        time_of_day = "afternoon"
+    elif 17 <= hour < 22:
+        time_of_day = "evening"
+    else:
+        time_of_day = "night"
+
+    day_type = (
+        "weekend"
+        if timestamp.weekday() >= 5
+        else "weekday"
+    )
+
+    return time_of_day, day_type
+
 def generate_session(session_id: int, user_id: int,
                      session_start: datetime) -> list[dict]:
     persona_name   = assign_persona()
     device_type    = random.choices(DEVICE_TYPES,   weights=DEVICE_WEIGHTS,   k=1)[0]
     traffic_source = random.choices(TRAFFIC_SOURCES, weights=TRAFFIC_WEIGHTS, k=1)[0]
+    time_of_day, day_type = get_time_context(session_start)
 
     steps_list      = FUNNELS[persona_name]["steps"]
     current_page    = steps_list[0][0] 
@@ -240,7 +374,9 @@ def generate_session(session_id: int, user_id: int,
             "persona_type":    persona_name,
             "funnel_stage":    funnel_stage,  
             "bounce_flag":     bounce_flag,
-            "conversion_flag": 0,             
+            "conversion_flag": 0,
+            "time_of_day": time_of_day,
+            "day_type": day_type,             
         })
 
         current_time += timedelta(seconds=time_spent)
